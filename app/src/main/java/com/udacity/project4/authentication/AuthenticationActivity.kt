@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.map
+import com.firebase.ui.auth.AuthMethodPickerLayout
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
@@ -29,7 +30,11 @@ class AuthenticationActivity : AppCompatActivity() {
         }
 
 //          TODO: If the user was authenticated, send him to RemindersActivity
-
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            startActivity(
+                Intent(this, RemindersActivity::class.java)
+            )
+        }
 
 //          TODO: a bonus is to customize the sign in flow to look nice using :
         //https://github.com/firebase/FirebaseUI-Android/blob/master/auth/README.md#custom-layout
