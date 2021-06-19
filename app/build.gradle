@@ -122,13 +122,13 @@ dependencies {
     androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:$dexMakerVersion"
     androidTestImplementation('org.koin:koin-test:2.0.1') { exclude group: 'org.mockito' }
 
-    // Firebase AuthUI
-    implementation 'com.firebaseui:firebase-ui-auth:6.4.0'
+
     // Import the Firebase BoM
     implementation platform('com.google.firebase:firebase-bom:28.1.0')
     // Declare the dependency for the Firebase Authentication library
     // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-auth-ktx'// Firebase AuthUI
+    implementation 'com.firebaseui:firebase-ui-auth:6.4.0'
 
     //Maps & Geofencing
     implementation "com.google.android.gms:play-services-location:$playServicesVersion"

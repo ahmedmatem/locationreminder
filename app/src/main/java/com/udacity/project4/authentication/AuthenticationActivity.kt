@@ -46,8 +46,9 @@ class AuthenticationActivity : AppCompatActivity() {
         if (requestCode == SIGN_IN_REQUEST_CODE) {
             val response = IdpResponse.fromResultIntent(data)
             if (resultCode == RESULT_OK) {
-                val user = FirebaseAuth.getInstance().currentUser
-                Log.d(TAG, "onActivityResult: Successfully signed in user ${user?.displayName}")
+//                val user = FirebaseAuth.getInstance().currentUser
+//                Log.d(TAG, "onActivityResult: Successfully signed in user ${user?.displayName}")
+                startActivity(Intent(this, RemindersActivity::class.java))
             } else {
                 Log.d(TAG, "Sign in unsuccessful: ${response?.error?.errorCode}")
             }
