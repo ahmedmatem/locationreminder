@@ -2,27 +2,24 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import androidx.navigation.fragment.NavHostFragment
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
+import kotlinx.android.synthetic.main.activity_reminders.*
 import org.koin.android.ext.android.inject
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
@@ -75,15 +72,20 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             }
         }
 
-        val mapFragment = activity?.supportFragmentManager
-            ?.findFragmentById(R.id.map)
-//        mapFragment.getMapAsync(this)
+
 
 
 //        TODO: call this function after the user confirms on the selected location
         onLocationSelected()
 
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val mapFragment = nav_host_fragment.childFragmentManager.findFragmentById(R.id.map)
+                as SupportMapFragment
+        mapFragment.getMapAsync(this)
     }
 
     override fun onRequestPermissionsResult(
@@ -147,11 +149,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        Log.d("SelectLocationFragment", "onMapReady: ")
 
         val sydney = LatLng(-34.0, 151.0)
+        val zoomLevel = 15f
         map.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        map.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, zoomLevel))
     }
 
     companion object {
