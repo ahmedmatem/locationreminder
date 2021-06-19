@@ -5,11 +5,9 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
-import androidx.navigation.fragment.NavHostFragment
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.*
@@ -25,6 +23,10 @@ import org.koin.android.ext.android.inject
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+    // A default location (Sydney, Australia) and default zoom to use when location permission is
+    // not granted.
+    private val defaultLocation = LatLng(-33.8523341, 151.2106085)
 
     private lateinit var map: GoogleMap
 
@@ -55,25 +57,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 //        TODO: add style to the map
 //        TODO: put a marker to location that the user selected
 
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // Request permission
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_REQUEST_CODE
-            )
-        } else {
-            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                getLatLong(location)
-            }
-        }
-
-
-
+        getDeviceLocation()
 
 //        TODO: call this function after the user confirms on the selected location
         onLocationSelected()
@@ -94,11 +78,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         grantResults: IntArray
     ) {
         when (requestCode) {
-            LOCATION_REQUEST_CODE -> {
+            PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION -> {
                 if (grantResults.isNotEmpty() &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED
 
                 ) {
+                    getDeviceLocation()
                 } else {
                     // Explain to the user that the feature is unavailable because
                     // the features requires a permission that the user has denied.
@@ -114,9 +99,38 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
-    private fun getLatLong(location: Location) {
-        _viewModel.latitude.value = location.latitude
-        _viewModel.longitude.value = location.longitude
+    private fun getDeviceLocation() {
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Request permission
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+            )
+            return
+        } else {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    map?.moveCamera(
+                        CameraUpdateFactory.newLatLngZoom(
+                            LatLng(location.latitude, location.longitude),
+                            DEFAULT_ZOOM.toFloat()
+                        )
+                    )
+                } else {
+                    map?.moveCamera(
+                        CameraUpdateFactory.newLatLngZoom(
+                            defaultLocation,
+                            DEFAULT_ZOOM.toFloat()
+                        )
+                    )
+                }
+            }
+        }
     }
 
     private fun onLocationSelected() {
@@ -150,13 +164,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
-        val sydney = LatLng(-34.0, 151.0)
-        val zoomLevel = 15f
-        map.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, zoomLevel))
+        map.addMarker(MarkerOptions().position(defaultLocation).title("Marker in Sydney"))
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, DEFAULT_ZOOM.toFloat()))
     }
 
     companion object {
-        private const val LOCATION_REQUEST_CODE = 722
+        private val TAG = SelectLocationFragment::class.java.simpleName
+        private const val DEFAULT_ZOOM = 15
+        private const val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 722
     }
 }
