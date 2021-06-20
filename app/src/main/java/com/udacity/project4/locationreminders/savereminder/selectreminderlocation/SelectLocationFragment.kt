@@ -174,6 +174,19 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         map.addMarker(MarkerOptions().position(defaultLocation).title("Marker in Sydney"))
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, DEFAULT_ZOOM.toFloat()))
+
+        setPoiClick(map)
+    }
+
+    private fun setPoiClick(map: GoogleMap) {
+        map.setOnPoiClickListener { poi ->
+            val poiMarker = map.addMarker(
+                MarkerOptions()
+                    .position(poi.latLng)
+                    .title(poi.name)
+            )
+            poiMarker.showInfoWindow()
+        }
     }
 
     companion object {
