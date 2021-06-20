@@ -3,10 +3,8 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Bundle
 import android.view.*
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -20,7 +18,6 @@ import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import kotlinx.android.synthetic.main.activity_reminders.*
-import kotlinx.android.synthetic.main.fragment_select_location.*
 import org.koin.android.ext.android.inject
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
@@ -32,7 +29,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private val defaultLocation = LatLng(-33.8523341, 151.2106085)
 
     private lateinit var map: GoogleMap
-    private var poiMarker: Marker? = null
+    private var selectedPoiMarker: Marker? = null
+    private var selectedPoi: PointOfInterest? = null
 
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
@@ -147,10 +145,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         //        TODO: When the user confirms on the selected location,
         //         send back the selected location details to the view model
         //         and navigate back to the previous fragment to save the reminder and add the geofence
-        poiMarker?.let { marker ->
-            val position = marker.position
+        selectedPoiMarker?.let { poiMarker ->
+            val position = poiMarker.position
             _viewModel.latitude.value = position.latitude
             _viewModel.longitude.value = position.longitude
+            _viewModel.selectedPOI.value = selectedPoi
         }
         _viewModel.navigationCommand.value = NavigationCommand.Back
     }
@@ -192,22 +191,22 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
-            // Non-nullable value of selectedPOI will enable save button
-            _viewModel.selectedPOI.value = poi
+            selectedPoi = poi
+            binding.saveLocationBtn.isEnabled = true
             addPoiMarker(map, poi)
         }
     }
 
     private fun addPoiMarker(map: GoogleMap, poi: PointOfInterest) {
         // Remove old Poi marker on the map if exists
-        poiMarker?.remove()
+        selectedPoiMarker?.remove()
         // Select new Poi marker
-        poiMarker = map.addMarker(
+        selectedPoiMarker = map.addMarker(
             MarkerOptions()
                 .position(poi.latLng)
                 .title(poi.name)
         )
-        poiMarker?.showInfoWindow()
+        selectedPoiMarker?.showInfoWindow()
     }
 
     companion object {
