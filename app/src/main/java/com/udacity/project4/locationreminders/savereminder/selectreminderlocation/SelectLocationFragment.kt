@@ -15,6 +15,7 @@ import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
+import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
@@ -143,7 +144,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         //        TODO: When the user confirms on the selected location,
         //         send back the selected location details to the view model
         //         and navigate back to the previous fragment to save the reminder and add the geofence
-        Toast.makeText(requireContext(), "woow", Toast.LENGTH_LONG).show()
+        poiMarker?.let { marker ->
+            val position = marker.position
+            _viewModel.latitude.value = position.latitude
+            _viewModel.longitude.value = position.longitude
+        }
+        _viewModel.navigationCommand.value = NavigationCommand.Back
     }
 
 
@@ -183,9 +189,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
-            poiMarker?.let{
-                it.remove()
-            }
+            // Non-nullable value of selectedPOI will enable save button
+            _viewModel.selectedPOI.value = poi
+            // Remove old Poi marker on the map if exists
+            poiMarker?.remove()
+            // Select new Poi marker
             poiMarker = map.addMarker(
                 MarkerOptions()
                     .position(poi.latLng)
