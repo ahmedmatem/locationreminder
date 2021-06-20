@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
 import android.view.*
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -18,6 +19,7 @@ import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import kotlinx.android.synthetic.main.activity_reminders.*
+import kotlinx.android.synthetic.main.fragment_select_location.*
 import org.koin.android.ext.android.inject
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
@@ -29,6 +31,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private val defaultLocation = LatLng(-33.8523341, 151.2106085)
 
     private lateinit var map: GoogleMap
+    private var poiMarker: Marker? = null
 
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
@@ -59,8 +62,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         getDeviceLocation()
 
-//        TODO: call this function after the user confirms on the selected location
-        onLocationSelected()
+        binding.saveLocationBtn.setOnClickListener {
+            // TODO: call this function after the user confirms on the selected location
+            onLocationSelected()
+        }
 
         return binding.root
     }
@@ -115,15 +120,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         } else {
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
+                    // move camera to the user's current location
                     map?.moveCamera(
                         CameraUpdateFactory.newLatLngZoom(
                             LatLng(location.latitude, location.longitude),
                             DEFAULT_ZOOM.toFloat()
                         )
-                    )
-                    map?.addMarker(
-                        MarkerOptions().position(LatLng(location.latitude, location.longitude))
-                            .title("Marker in Locale")
                     )
                 } else {
                     map?.moveCamera(
@@ -141,6 +143,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         //        TODO: When the user confirms on the selected location,
         //         send back the selected location details to the view model
         //         and navigate back to the previous fragment to save the reminder and add the geofence
+        Toast.makeText(requireContext(), "woow", Toast.LENGTH_LONG).show()
     }
 
 
@@ -180,12 +183,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
-            val poiMarker = map.addMarker(
+            poiMarker?.let{
+                it.remove()
+            }
+            poiMarker = map.addMarker(
                 MarkerOptions()
                     .position(poi.latLng)
                     .title(poi.name)
             )
-            poiMarker.showInfoWindow()
+            poiMarker?.showInfoWindow()
         }
     }
 
