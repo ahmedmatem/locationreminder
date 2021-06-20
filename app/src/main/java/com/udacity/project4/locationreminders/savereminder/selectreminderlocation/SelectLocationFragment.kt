@@ -128,6 +128,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                             DEFAULT_ZOOM.toFloat()
                         )
                     )
+                    _viewModel.selectedPOI.value?.let { poi ->
+                        addPoiMarker(map, poi)
+                    }
                 } else {
                     map?.moveCamera(
                         CameraUpdateFactory.newLatLngZoom(
@@ -191,16 +194,20 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         map.setOnPoiClickListener { poi ->
             // Non-nullable value of selectedPOI will enable save button
             _viewModel.selectedPOI.value = poi
-            // Remove old Poi marker on the map if exists
-            poiMarker?.remove()
-            // Select new Poi marker
-            poiMarker = map.addMarker(
-                MarkerOptions()
-                    .position(poi.latLng)
-                    .title(poi.name)
-            )
-            poiMarker?.showInfoWindow()
+            addPoiMarker(map, poi)
         }
+    }
+
+    private fun addPoiMarker(map: GoogleMap, poi: PointOfInterest) {
+        // Remove old Poi marker on the map if exists
+        poiMarker?.remove()
+        // Select new Poi marker
+        poiMarker = map.addMarker(
+            MarkerOptions()
+                .position(poi.latLng)
+                .title(poi.name)
+        )
+        poiMarker?.showInfoWindow()
     }
 
     companion object {
