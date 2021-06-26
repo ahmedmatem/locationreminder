@@ -59,8 +59,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 //        TODO: add style to the map
 //        TODO: put a marker to location that the user selected
 
-        getDeviceLocation()
-
         binding.saveLocationBtn.setOnClickListener {
             // TODO: call this function after the user confirms on the selected location
             onLocationSelected()
@@ -146,10 +144,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         //         send back the selected location details to the view model
         //         and navigate back to the previous fragment to save the reminder and add the geofence
         selectedPoiMarker?.let { poiMarker ->
-            val position = poiMarker.position
-            _viewModel.latitude.value = position.latitude
-            _viewModel.longitude.value = position.longitude
+            _viewModel.latitude.value = poiMarker.position.latitude
+            _viewModel.longitude.value = poiMarker.position.longitude
             _viewModel.selectedPOI.value = selectedPoi
+            _viewModel.reminderSelectedLocationStr.value = poiMarker.title
         }
         _viewModel.navigationCommand.value = NavigationCommand.Back
     }
@@ -183,8 +181,14 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
-        map.addMarker(MarkerOptions().position(defaultLocation).title("Marker in Sydney"))
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, DEFAULT_ZOOM.toFloat()))
+        if (_viewModel.selectedPOI.value != null) {
+            _viewModel.selectedPOI?.value.let { poi ->
+                addPoiMarker(map, poi!!)
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(poi!!.latLng, DEFAULT_ZOOM.toFloat()))
+            }
+        } else {
+            getDeviceLocation()
+        }
 
         setPoiClick(map)
     }
