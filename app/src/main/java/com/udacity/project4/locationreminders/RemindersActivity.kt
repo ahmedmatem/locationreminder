@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -81,7 +82,7 @@ class RemindersActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkPermissions() {
+    fun checkPermissions() {
         if (foregroundAndBackgroundLocationPermissionApproved()) {
             checkDeviceLocationSettings()
         } else {
@@ -90,7 +91,7 @@ class RemindersActivity : AppCompatActivity() {
     }
 
     @TargetApi(android.os.Build.VERSION_CODES.Q)
-    private fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
+    fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
         val foregroundLocationApproved = (
                 PackageManager.PERMISSION_GRANTED ==
                         ActivityCompat.checkSelfPermission(
@@ -112,7 +113,7 @@ class RemindersActivity : AppCompatActivity() {
     }
 
     @TargetApi(android.os.Build.VERSION_CODES.Q)
-    private fun requestForegroundAndBackgroundLocationPermission() {
+    fun requestForegroundAndBackgroundLocationPermission() {
         if (foregroundAndBackgroundLocationPermissionApproved())
             return
         var permissionsArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -174,11 +175,6 @@ class RemindersActivity : AppCompatActivity() {
                 (nav_host_fragment as NavHostFragment).navController.popBackStack()
                 return true
             }
-            R.id.logout -> {
-                AuthUI.getInstance().signOut(this)
-                finish()
-                return true
-            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -192,7 +188,5 @@ class RemindersActivity : AppCompatActivity() {
         private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
         private const val LOCATION_PERMISSION_INDEX = 0
         private const val BACKGROUND_LOCATION_PERMISSION_INDEX = 1
-        private const val GEOFENCE_RADIUS_IN_METERS = 100f
-        private val GEOFENCING_EXPIRATION_IN_MILLISECONDS: Long = TimeUnit.HOURS.toMillis(1)
     }
 }
