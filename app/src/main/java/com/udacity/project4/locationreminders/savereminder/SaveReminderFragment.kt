@@ -79,7 +79,10 @@ class SaveReminderFragment : BaseFragment() {
 //            TODO: use the user entered reminder details to:
 //             1) add a geofencing request
 //             2) save the reminder to the local db
-            addGeofencingRequestAndSave(reminderDataItem)
+
+            if(_viewModel.validateEnteredData(reminderDataItem)){
+                addGeofencingRequestAndSave(reminderDataItem)
+            }
         }
     }
 
@@ -103,7 +106,7 @@ class SaveReminderFragment : BaseFragment() {
                     data.longitude!!,
                     GEOFENCE_RADIUS_IN_METERS
                 )
-                setExpirationDuration(GEOFENCING_EXPIRATION_IN_MILLISECONDS)
+                setExpirationDuration(Geofence.NEVER_EXPIRE)
                 setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
             }
             .build()
@@ -144,10 +147,11 @@ class SaveReminderFragment : BaseFragment() {
     }
 
     companion object {
-        internal const val ACTION_GEOFENCE_EVENT =
-            "locationreminders.savereminder.action.ACTION_GEOFENCE_EVENT"
         private const val TAG = "SaveReminderFragment"
-        private const val GEOFENCE_RADIUS_IN_METERS = 100f
-        private val GEOFENCING_EXPIRATION_IN_MILLISECONDS: Long = TimeUnit.HOURS.toMillis(1)
+
     }
 }
+internal const val GEOFENCE_RADIUS_IN_METERS = 100f
+val GEOFENCING_EXPIRATION_IN_MILLISECONDS: Long = TimeUnit.HOURS.toMillis(1)
+internal const val ACTION_GEOFENCE_EVENT =
+    "locationreminders.savereminder.action.ACTION_GEOFENCE_EVENT"

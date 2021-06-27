@@ -3,6 +3,7 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.view.*
 import androidx.core.app.ActivityCompat
@@ -15,6 +16,7 @@ import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
+import com.udacity.project4.locationreminders.savereminder.GEOFENCE_RADIUS_IN_METERS
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import kotlinx.android.synthetic.main.activity_reminders.*
@@ -202,13 +204,20 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     private fun addPoiMarker(map: GoogleMap, poi: PointOfInterest) {
-        // Remove old Poi marker on the map if exists
-        selectedPoiMarker?.remove()
-        // Select new Poi marker
+        map.clear()
+
         selectedPoiMarker = map.addMarker(
             MarkerOptions()
                 .position(poi.latLng)
                 .title(poi.name)
+        )
+        map.addCircle(
+            CircleOptions()
+                .center(poi.latLng)
+                .radius(GEOFENCE_RADIUS_IN_METERS.toDouble())
+                .fillColor(Color.argb(64, 255, 0, 0))
+                .strokeColor(Color.RED)
+                .strokeWidth(4f)
         )
         selectedPoiMarker?.showInfoWindow()
     }

@@ -7,4 +7,5 @@
     <color name="white">#ffffff</color>
 
     <color name="colorDisabled">#77D81B60</color>
+    <color name="geofence_circle_color">#77D81B60</color>
 </resources>
