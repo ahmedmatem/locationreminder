@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.udacity.project4.base.BaseRecyclerViewAdapter
+import com.udacity.project4.locationreminders.data.dto.ReminderDTO
+import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -65,4 +67,16 @@ fun View.fadeOut() {
             this@fadeOut.visibility = View.GONE
         }
     })
+}
+
+//convert ReminderDTO into ReminderDataItem
+fun ReminderDTO.toReminderDataItem(): ReminderDataItem? {
+    return ReminderDataItem(
+        title, description, location, latitude, longitude, id
+    )
+}
+
+//convert ReminderDTO list into ReminderDataItemList
+fun MutableList<ReminderDTO>.toReminderDataItemList(): List<ReminderDataItem?>? {
+    return map { it.toReminderDataItem() }
 }
