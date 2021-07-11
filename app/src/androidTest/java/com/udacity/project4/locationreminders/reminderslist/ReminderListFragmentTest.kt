@@ -127,4 +127,16 @@ class ReminderListFragmentTest {
         Thread.sleep(2000)
     }
 
+    @Test
+    fun noReminders_showErrorMessage() {
+        // Given empty list of reminders
+        reminders.clear()
+
+        // When - Reminder list fragment launched to display error message
+        launchFragmentInContainer<ReminderListFragment>(null, R.style.AppTheme)
+
+        onView(withId(R.id.noDataTextView))
+            .check(matches(isDisplayed()))
+    }
+
 }
