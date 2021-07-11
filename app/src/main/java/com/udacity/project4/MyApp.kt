@@ -14,9 +14,6 @@ import org.koin.dsl.module
 
 class MyApp : Application() {
 
-    val reminderDataSource: ReminderDataSource
-        get() = ServiceLocator.provideReminderDataSource(this)
-
     override fun onCreate() {
         super.onCreate()
 

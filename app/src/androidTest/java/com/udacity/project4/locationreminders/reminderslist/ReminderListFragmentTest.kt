@@ -57,10 +57,8 @@ class ReminderListFragmentTest {
         reminder4
     )
 
-    private lateinit var viewModel: RemindersListViewModel
-
-    @get:Rule
-    var instantExecutorRule = InstantTaskExecutorRule()
+//    @get:Rule
+//    var instantExecutorRule = InstantTaskExecutorRule()
 
     @Before
     fun setupViewModel() {
