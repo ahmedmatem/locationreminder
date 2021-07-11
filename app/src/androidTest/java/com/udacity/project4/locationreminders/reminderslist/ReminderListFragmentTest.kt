@@ -2,8 +2,12 @@ package com.udacity.project4.locationreminders.reminderslist
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.fragment.app.testing.launchFragmentInContainer
+import androidx.navigation.NavController
+import androidx.navigation.Navigation
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
+import androidx.test.espresso.Espresso.onData
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.udacity.project4.R
@@ -25,6 +29,16 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
+
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.PerformException
+import androidx.test.espresso.action.ViewActions.*
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.matcher.ViewMatchers.*
+import org.hamcrest.core.IsNot.not
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
@@ -88,10 +102,25 @@ class ReminderListFragmentTest {
     //    TODO: add testing for the error messages.
 
     @Test
+    fun clickAddReminderFab_navigateToSaveReminderFragment() {
+        // Given - On the home screen
+        val scenario = launchFragmentInContainer<ReminderListFragment>(null, R.style.AppTheme)
+        val navController = mock(NavController::class.java)
+        scenario.onFragment {
+            Navigation.setViewNavController(it.view!!, navController)
+        }
+
+        // WHEN - Click on the "+" button
+        onView(withId(R.id.addReminderFAB)).perform(click())
+
+        // THEN - Verify that we navigate to the add screen
+        verify(navController)
+            .navigate(ReminderListFragmentDirections.toSaveReminder())
+    }
+
+    @Test
     fun reminderList_DisplayedInUi() = runBlocking {
-        // Given a list of reminders
-        // viewModel.loadReminders()
-//        val v = viewModel.remindersList.getOrAwaitValue()
+        // Given a list of reminders by fake data source/repository
 
         // When - Reminder list fragment launched to display items in the list
         launchFragmentInContainer<ReminderListFragment>(null, R.style.AppTheme)
