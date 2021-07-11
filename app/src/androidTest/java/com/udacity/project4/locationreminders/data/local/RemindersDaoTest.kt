@@ -68,4 +68,74 @@ class RemindersDaoTest {
         assertThat(loaded.latitude, `is`(reminder.latitude))
         assertThat(loaded.longitude, `is`(reminder.longitude))
     }
+
+    @Test
+    fun updateReminderAndGetById() = runBlockingTest {
+        // Given - save/insert and update a reminder
+        val reminder = ReminderDTO(
+            "title",
+            "description",
+            "location",
+            0.0,
+            0.0
+        )
+        database.reminderDao().saveReminder(reminder)
+
+        val newReminder = ReminderDTO(
+            "new_title",
+            "new_description",
+            "new_location",
+            1.0,
+            1.0,
+            reminder.id
+        )
+        // update
+        database.reminderDao().saveReminder(newReminder)
+
+        // When - get reminder by id
+        val loaded = database.reminderDao().getReminderById(newReminder.id)
+
+        // Then - the loaded data contains the expected values
+        assertThat<ReminderDTO>(loaded as ReminderDTO, notNullValue())
+        assertThat(loaded.id, `is`(newReminder.id))
+        assertThat(loaded.title, `is`(newReminder.title))
+        assertThat(loaded.description, `is`(newReminder.description))
+        assertThat(loaded.location, `is`(newReminder.location))
+        assertThat(loaded.latitude, `is`(newReminder.latitude))
+        assertThat(loaded.longitude, `is`(newReminder.longitude))
+    }
+
+    @Test
+    fun deleteAllReminders_getReminders_sizeZero() = runBlockingTest {
+        // Given - reminders
+        val reminder1 = ReminderDTO(
+            "title_1",
+            "description_1",
+            "location_1",
+            1.0,
+            1.0
+        )
+        val reminder2 = ReminderDTO(
+            "title_2",
+            "description_2",
+            "location_2",
+            2.0,
+            2.0
+        )
+        database.reminderDao().saveReminder(reminder1)
+        database.reminderDao().saveReminder(reminder2)
+
+        // When - get all reminders
+        val allReminders = database.reminderDao().getReminders()
+
+        // Then - assert that all reminders count is as expected
+        assertThat(2, `is`(allReminders.size))
+
+        // When - delete all reminders and getReminders
+        database.reminderDao().deleteAllReminders()
+        val loaded = database.reminderDao().getReminders()
+
+        // Then - assert that the loaded reminders count is 0
+        assertThat(0, `is`(loaded.size))
+    }
 }
