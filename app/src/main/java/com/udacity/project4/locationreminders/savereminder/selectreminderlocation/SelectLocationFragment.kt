@@ -85,7 +85,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION -> {
                 if (grantResults.isNotEmpty() &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED
-
                 ) {
                     getDeviceLocation()
                 } else {
@@ -110,13 +109,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             // Request permission
-            ActivityCompat.requestPermissions(
-                requireActivity(),
+            requestPermissions(
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
             )
-            return
         } else {
+            // Location permission GRANTED - perform action
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
                     // move camera to the user's current location
