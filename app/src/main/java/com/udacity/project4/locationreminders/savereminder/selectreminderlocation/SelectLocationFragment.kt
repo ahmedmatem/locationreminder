@@ -115,6 +115,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             )
         } else {
             // Location permission GRANTED - perform action
+            map.isMyLocationEnabled = true
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
                     // move camera to the user's current location
