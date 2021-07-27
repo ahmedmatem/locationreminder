@@ -95,7 +95,7 @@ class SaveReminderFragment : BaseFragment() {
 
     override fun onStart() {
         super.onStart()
-        checkPermissions()
+//        checkPermissions()
     }
 
     override fun onDestroy() {
@@ -157,7 +157,7 @@ class SaveReminderFragment : BaseFragment() {
             Snackbar.make(
                 activity!!.findViewById(R.id.activity_reminders_root),
                 R.string.permission_denied_explanation,
-                Snackbar.LENGTH_INDEFINITE
+                Snackbar.LENGTH_LONG
             )
                 .setAction(R.string.settings) {
                     startActivity(Intent().apply {
