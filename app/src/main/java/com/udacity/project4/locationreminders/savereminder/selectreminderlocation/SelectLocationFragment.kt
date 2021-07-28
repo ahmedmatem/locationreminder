@@ -9,7 +9,6 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.*
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
@@ -96,7 +95,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     // permission granted - perform action required this permission
                     getDeviceLocation()
                 } else {
-                    if(shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)){
+                    if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
                         Snackbar.make(
                             activity!!.findViewById(R.id.activity_reminders_root),
                             R.string.permission_denied_explanation,
@@ -123,40 +122,34 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        requestPermission()
-    }
-
     @SuppressLint("MissingPermission")
     private fun getDeviceLocation() {
         if (isPermissionGranted()) {
+            map.isMyLocationEnabled = true
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
                     // move camera to the user's current location
                     map?.moveCamera(
                         CameraUpdateFactory.newLatLngZoom(
                             LatLng(location.latitude, location.longitude),
-                            DEFAULT_ZOOM.toFloat()
+                            DEFAULT_ZOOM
                         )
                     )
-                    _viewModel.selectedPOI.value?.let { poi ->
-                        addPoiMarker(map, poi)
-                    }
+
                 } else {
                     map?.moveCamera(
                         CameraUpdateFactory.newLatLngZoom(
                             defaultLocation,
-                            DEFAULT_ZOOM.toFloat()
+                            DEFAULT_ZOOM
                         )
                     )
                 }
+                _viewModel.selectedPOI.value?.let { poi ->
+                    addPoiMarker(map, poi)
+                }
             }
         } else {
-            requestPermissions(
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
-            )
+            requestLocationPermission()
         }
     }
 
@@ -202,25 +195,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        if (isPermissionGranted()) {
-            map.isMyLocationEnabled = true // Enable location tracking
-        } else {
-            requestPermission()
-        }
 
-        if (_viewModel.selectedPOI.value != null) {
-            _viewModel.selectedPOI?.value.let { poi ->
-                addPoiMarker(map, poi!!)
-                map.moveCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                        poi!!.latLng,
-                        DEFAULT_ZOOM.toFloat()
-                    )
-                )
-            }
-        } else {
-            getDeviceLocation()
-        }
+        getDeviceLocation()
 
         setPoiClick(map)
         setMapLongClick(map)
@@ -260,12 +236,29 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         selectedPoiMarker?.showInfoWindow()
     }
 
-    private fun requestPermission() {
-        if(isPermissionGranted()) return
-        requestPermissions(
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-            PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
-        )
+    private fun requestLocationPermission() {
+        when {
+            isPermissionGranted() -> getDeviceLocation()
+            shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) -> {
+                Snackbar.make(
+                    activity!!.findViewById(R.id.activity_reminders_root),
+                    R.string.permission_denied_explanation,
+                    Snackbar.LENGTH_LONG
+                ).setAction(R.string.settings) {
+                    startActivity(Intent().apply {
+                        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    })
+                }.show()
+            }
+            else -> {
+                requestPermissions(
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+                )
+            }
+        }
     }
 
     private fun isPermissionGranted(): Boolean {
@@ -277,7 +270,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     companion object {
         private val TAG = SelectLocationFragment::class.java.simpleName
-        private const val DEFAULT_ZOOM = 15
+        private const val DEFAULT_ZOOM = 15f
         private const val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 722
     }
 }
