@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:textSize="@dimen/text_size_normal"
             android:padding="@dimen/padding_normal"
-            android:text="@string/select_poi"
+            android:text="@string/select_location_or_poi_text"
             app:layout_constraintTop_toTopOf="parent" />
 
         <!--TODO: Add the map fragment for the user to select the location-->

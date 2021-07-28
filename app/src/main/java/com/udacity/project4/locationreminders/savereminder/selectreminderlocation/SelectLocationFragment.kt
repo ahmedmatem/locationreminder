@@ -2,9 +2,15 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
 import android.view.*
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
@@ -12,6 +18,8 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
+import com.google.android.material.snackbar.Snackbar
+import com.udacity.project4.BuildConfig
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
@@ -86,56 +94,64 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 if (grantResults.isNotEmpty() &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED
                 ) {
+                    // permission granted - perform action required this permission
                     getDeviceLocation()
                 } else {
-                    // Explain to the user that the feature is unavailable because
-                    // the features requires a permission that the user has denied.
-                    // At the same time, respect the user's decision. Don't link to
-                    // system settings in an effort to convince the user to change
-                    // their decision.
+                    if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                        Snackbar.make(
+                            activity!!.findViewById(R.id.activity_reminders_root),
+                            R.string.permission_denied_explanation,
+                            Snackbar.LENGTH_LONG
+                        ).setAction(R.string.settings) {
+                            startActivity(Intent().apply {
+                                action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            })
+                        }.show()
+                    } else {
+                        requestPermissions(
+                            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                            PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+                        )
+                    }
                 }
                 return
             }
             else -> {
-
+                // Ignore all other requests.
             }
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun getDeviceLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // Request permission
-            requestPermissions(
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
-            )
-        } else {
-            // Location permission GRANTED - perform action
+        if (isPermissionGranted()) {
+            map.isMyLocationEnabled = true
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
                     // move camera to the user's current location
                     map?.moveCamera(
                         CameraUpdateFactory.newLatLngZoom(
                             LatLng(location.latitude, location.longitude),
-                            DEFAULT_ZOOM.toFloat()
+                            DEFAULT_ZOOM
                         )
                     )
-                    _viewModel.selectedPOI.value?.let { poi ->
-                        addPoiMarker(map, poi)
-                    }
+
                 } else {
                     map?.moveCamera(
                         CameraUpdateFactory.newLatLngZoom(
                             defaultLocation,
-                            DEFAULT_ZOOM.toFloat()
+                            DEFAULT_ZOOM
                         )
                     )
                 }
+                _viewModel.selectedPOI.value?.let { poi ->
+                    addPoiMarker(map, poi)
+                }
             }
+        } else {
+            requestLocationPermission()
         }
     }
 
@@ -178,19 +194,31 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         else -> super.onOptionsItemSelected(item)
     }
 
+    @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
-        if (_viewModel.selectedPOI.value != null) {
-            _viewModel.selectedPOI?.value.let { poi ->
-                addPoiMarker(map, poi!!)
-                map.moveCamera(CameraUpdateFactory.newLatLngZoom(poi!!.latLng, DEFAULT_ZOOM.toFloat()))
-            }
-        } else {
-            getDeviceLocation()
-        }
+        getDeviceLocation()
 
+        setMapStyle(map)
         setPoiClick(map)
+        setMapLongClick(map)
+    }
+    
+    private fun setMapStyle(map: GoogleMap) {
+        try {
+            val success = map.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(
+                    requireContext(),
+                    R.raw.map_style
+                )
+            )
+            if (!success) {
+                Log.d(TAG, "Style parsing failed.")
+            }
+        } catch (e: Resources.NotFoundException) {
+            Log.e(TAG, "Can't find style. Error: ", e)
+        }
     }
 
     private fun setPoiClick(map: GoogleMap) {
@@ -201,9 +229,16 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
+    private fun setMapLongClick(map: GoogleMap) {
+        map.setOnMapLongClickListener { latLng ->
+            selectedPoi = PointOfInterest(latLng, latLng.latitude.toString(), "Custom Location")
+            addPoiMarker(map, selectedPoi!!)
+            binding.saveLocationBtn.isEnabled = true
+        }
+    }
+
     private fun addPoiMarker(map: GoogleMap, poi: PointOfInterest) {
         map.clear()
-
         selectedPoiMarker = map.addMarker(
             MarkerOptions()
                 .position(poi.latLng)
@@ -220,9 +255,41 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         selectedPoiMarker?.showInfoWindow()
     }
 
+    private fun requestLocationPermission() {
+        when {
+            isPermissionGranted() -> getDeviceLocation()
+            shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) -> {
+                Snackbar.make(
+                    activity!!.findViewById(R.id.activity_reminders_root),
+                    R.string.permission_denied_explanation,
+                    Snackbar.LENGTH_LONG
+                ).setAction(R.string.settings) {
+                    startActivity(Intent().apply {
+                        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    })
+                }.show()
+            }
+            else -> {
+                requestPermissions(
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+                )
+            }
+        }
+    }
+
+    private fun isPermissionGranted(): Boolean {
+        return ActivityCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     companion object {
         private val TAG = SelectLocationFragment::class.java.simpleName
-        private const val DEFAULT_ZOOM = 15
+        private const val DEFAULT_ZOOM = 15f
         private const val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 722
     }
 }
