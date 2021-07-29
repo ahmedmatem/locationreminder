@@ -97,7 +97,7 @@ class RemindersActivityTest :
                     get() as ReminderDataSource
                 )
             }
-            single { RemindersLocalRepository(get()) as ReminderDataSource}
+            single { RemindersLocalRepository(get()) as ReminderDataSource }
             single { LocalDB.createRemindersDao(appContext) }
         }
         //declare a new koin module
@@ -168,10 +168,39 @@ class RemindersActivityTest :
     }
 
     @Test
-    fun loadReminders_onError_showMessageInSnackBar() = runBlockingTest {
+    fun invalidTitle_showSnackBar() = runBlockingTest {
         val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
         dataBindingIdlingResource.monitorActivity(activityScenario)
 
+        onView(withId(R.id.addReminderFAB)).perform(click())
+
+        onView(withId(R.id.saveReminder)).perform(click())
+
+        onView(
+            allOf(
+                withId(com.google.android.material.R.id.snackbar_text),
+                withText(appContext.getString(R.string.err_enter_title))
+            )
+        ).check(matches(isDisplayed()))
+    }
+
+    @Test
+    fun invalidLocation_showSnackBar() = runBlockingTest {
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+        dataBindingIdlingResource.monitorActivity(activityScenario)
+
+        onView(withId(R.id.addReminderFAB)).perform(click())
+
+        onView(withId(R.id.reminderTitle)).perform(typeText("Title"))
+        Espresso.closeSoftKeyboard()
+        onView(withId(R.id.saveReminder)).perform(click())
+
+        onView(
+            allOf(
+                withId(com.google.android.material.R.id.snackbar_text),
+                withText(appContext.getString(R.string.err_select_location))
+            )
+        ).check(matches(isDisplayed()))
     }
 
 }
