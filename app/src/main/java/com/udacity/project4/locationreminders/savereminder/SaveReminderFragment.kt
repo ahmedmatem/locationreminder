@@ -240,7 +240,7 @@ class SaveReminderFragment : BaseFragment() {
         geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent).run {
             addOnSuccessListener {
                 // Save reminder to local db
-                _viewModel.saveReminder(reminder)
+                _viewModel.validateAndSaveReminder(reminder)
             }
             addOnFailureListener {
                 Toast.makeText(
