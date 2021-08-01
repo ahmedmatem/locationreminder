@@ -3,12 +3,16 @@ package com.udacity.project4.locationreminders.reminderslist
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.udacity.project4.locationreminders.MainCoroutineRule
 import com.udacity.project4.locationreminders.data.FakeDataSource
+import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.getOrAwaitValue
 import com.udacity.project4.utils.toReminderDataItemList
 import org.hamcrest.MatcherAssert.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
+import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.core.IsEqual
 import org.junit.After
 import org.junit.Before
@@ -32,16 +36,22 @@ class RemindersListViewModelTest {
         mutableListOf(reminderDTO1, reminderDTO2, reminderDTO3, reminderDTO4, reminderDTO5)
 
     // Subject under test
+    private lateinit var dataSource: FakeDataSource
     private lateinit var _viewModel: RemindersListViewModel
+
+    @ExperimentalCoroutinesApi
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
 
     @Before
     fun setupViewModel() {
+        dataSource = FakeDataSource(fakeReminders)
         _viewModel = RemindersListViewModel(
             ApplicationProvider.getApplicationContext(),
-            FakeDataSource(fakeReminders)
+            dataSource
         )
     }
 
@@ -51,13 +61,33 @@ class RemindersListViewModelTest {
     }
 
     @Test
-    fun loadReminders_requestAllRemindersFromLocalDb() {
+    fun loadReminders_requestAllRemindersAndShowLoading() {
+        mainCoroutineRule.pauseDispatcher()
         // When all reminders are required from local db
         _viewModel.loadReminders()
+        assertThat(_viewModel.showLoading.getOrAwaitValue(), `is`(true))
+
+        mainCoroutineRule.resumeDispatcher()
+        assertThat(_viewModel.showLoading.getOrAwaitValue(), `is`(false))
+        assertThat(_viewModel.showNoData.getOrAwaitValue(), `is`(false))
 
         // Then view model RemindersList live data wil be set
         val remindersList = _viewModel.remindersList.getOrAwaitValue()
-
         assertThat(remindersList, IsEqual(fakeReminders.toReminderDataItemList()))
     }
+
+    @Test
+    fun noReminders_showNoData() = mainCoroutineRule.runBlockingTest {
+        dataSource.deleteAllReminders()
+        _viewModel.loadReminders()
+        assertThat(_viewModel.showNoData.getOrAwaitValue(), `is`(true))
+    }
+
+    @Test
+    fun unavailableReminders_showError() {
+        dataSource.setReturnError(true)
+        _viewModel.loadReminders()
+        assertThat(_viewModel.showSnackBar.getOrAwaitValue(), `is`("No reminders found"))
+    }
+
 }

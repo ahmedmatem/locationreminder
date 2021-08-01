@@ -14,8 +14,17 @@ class FakeDataSource(
 
 //    TODO: Create a fake data source to act as a double to the real data source
 
+    private var shouldReturnError = false
+
+    fun setReturnError(value: Boolean) {
+        shouldReturnError = value
+    }
+
     override suspend fun getReminders(): Result<List<ReminderDTO>> {
         // TODO("Return the reminders")
+        if (shouldReturnError) {
+            return Result.Error("No reminders found")
+        }
         return Result.Success(reminders)
     }
 
@@ -26,6 +35,10 @@ class FakeDataSource(
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
         // TODO("return the reminder with the id")
+        if (shouldReturnError) {
+            return Result.Error("Test exception")
+        }
+
         val reminder = reminders?.firstOrNull() {
             it.id == id
         }
