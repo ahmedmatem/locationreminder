@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runBlockingTest
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
@@ -77,6 +78,16 @@ class RemindersLocalRepositoryTest {
         assertThat(loaded.data.location, `is`(newReminder.location))
         assertThat(loaded.data.latitude, `is`(newReminder.latitude))
         assertThat(loaded.data.longitude, `is`(newReminder.longitude))
+    }
+
+    @Test
+    fun noReminder_returnError() = runBlocking {
+        localRepository.deleteAllReminders()
+        val reminder = localRepository.getReminder("undefined_id")
+        assertThat(reminder is Result.Error, `is`(true))
+
+        reminder as Result.Error
+        assertThat(reminder.message, `is`("Reminder not found!"))
     }
 
     @Test
